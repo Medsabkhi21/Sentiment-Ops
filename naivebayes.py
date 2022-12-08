@@ -17,6 +17,9 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import auc, roc_curve
 # train test split 
 from sklearn.model_selection import train_test_split
+from setup_mlflow import MLFLOW_TRACKING_URI,MLFLOW_TRACKING_USERNAME,MLFLOW_TRACKING_PASSWORD
+import pickle
+
 
 STOPWORDS = stopwords.words("english")
 
@@ -92,24 +95,22 @@ print(len(X_train), len(X_valid), len(y_train), len(y_valid))
 vectorizer = CountVectorizer() 
 # fit on the entire dataset 
 input_data = vectorizer.fit(tweets_df['clean_text3'])
+
+#save fitted vectorizer for prediction
+vectorizer_pkl = open('vectorizer.pkl', 'wb')
+pickle.dump(vectorizer, vectorizer_pkl)
 # transform 
 X_train = vectorizer.transform(X_train)
 X_valid = vectorizer.transform(X_valid)
 
-# read the variable from the file 
-ifile = open("setup_mlflow.txt", "r").readlines()
-mlflow_tracking_uri = ifile[0].split("=")[1].strip()
-mlflow_tracking_username = ifile[1].split("=")[1].strip()
-mlflow_tracking_password = ifile[2].split("=")[1].strip()
-os.environ["MLFLOW_TRACKING_URI"] = mlflow_tracking_uri
-os.environ["MLFLOW_TRACKING_USERNAME"] = mlflow_tracking_username
-os.environ["MLFLOW_TRACKING_PASSWORD"] = mlflow_tracking_password
-print(os.environ.get("MLFLOW_TRACKING_URI"))
-print(os.environ.get("MLFLOW_TRACKING_USERNAME"))
-print(os.environ.get("MLFLOW_TRACKING_PASSWORD"))
-print(os.environ)
+
+
+os.environ["MLFLOW_TRACKING_URI"] = MLFLOW_TRACKING_URI
+os.environ["MLFLOW_TRACKING_USERNAME"] = MLFLOW_TRACKING_USERNAME
+os.environ["MLFLOW_TRACKING_PASSWORD"] = MLFLOW_TRACKING_PASSWORD
+
 # set up a client
-mlflow_client = MlflowClient(tracking_uri=mlflow_tracking_uri)
+mlflow_client = MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
 # MODELLING 
 classifier = MultinomialNB() 
 model_name = "NaiveBayes"
@@ -125,14 +126,14 @@ except:
 
 
 print("Set up mlflow tracking uri")
-mlflow.set_tracking_uri(mlflow_tracking_uri)
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 # context manager for basic logging 
 # use mlflow for experiment tracking
 with mlflow.start_run(experiment_id=experiment_id,
                     run_name=run_name,
                     nested=False,):
     print("Autlog")
-    mlflow.sklearn.autolog(log_models=True,log_input_examples=True,log_model_signatures=True, )
+    mlflow.sklearn.autolog(log_models=True,log_input_examples=True,log_model_signatures=True )
     classifier.fit(X_train, y_train)
     y_pred = classifier.predict(X_valid)
     fpr, tpr, thresholds = roc_curve(y_valid, y_pred)
@@ -140,5 +141,7 @@ with mlflow.start_run(experiment_id=experiment_id,
     print(roc_auc)
     mlflow.sklearn.log_model(sk_model=classifier, artifact_path="model")
 
+    output = open('classifier.pkl', 'wb')
+    pickle.dump(classifier, output)
 
 mlflow.end_run()
