@@ -30,7 +30,7 @@ from sklearn.metrics import confusion_matrix, classification_report
 # numpy 
 import numpy as np 
 # matplot lib 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 # argparse
 import argparse
 # logging
@@ -193,21 +193,18 @@ X_train, X_valid, y_train, y_valid = train_test_split(
     )
 print(len(X_train), len(X_valid), len(y_train), len(y_valid))
 # setup MLflow
-ifile = open("setup_mlflow.txt", "r").readlines()
-mlflow_tracking_uri = ifile[0].split("=")[1].strip()
-mlflow_tracking_username = ifile[1].split("=")[1].strip()
-mlflow_tracking_password = ifile[2].split("=")[1].strip()
-os.environ["MLFLOW_TRACKING_URI"] = mlflow_tracking_uri
-os.environ["MLFLOW_TRACKING_USERNAME"] = mlflow_tracking_username
-os.environ["MLFLOW_TRACKING_PASSWORD"] = mlflow_tracking_password
-print(os.environ.get("MLFLOW_TRACKING_URI"))
-print(os.environ.get("MLFLOW_TRACKING_USERNAME"))
-print(os.environ.get("MLFLOW_TRACKING_PASSWORD"))
-print(os.environ)
+
+from setup_mlflow import MLFLOW_TRACKING_URI,MLFLOW_TRACKING_USERNAME,MLFLOW_TRACKING_PASSWORD
+ 
+
+os.environ["MLFLOW_TRACKING_URI"] = MLFLOW_TRACKING_URI
+os.environ["MLFLOW_TRACKING_USERNAME"] = MLFLOW_TRACKING_USERNAME
+os.environ["MLFLOW_TRACKING_PASSWORD"] = MLFLOW_TRACKING_PASSWORD
+
 
 print("Set up mlflow tracking uri")
 
-mlflow_client = MlflowClient(tracking_uri=mlflow_tracking_uri)
+mlflow_client = MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
 run_name = run_name_
 experiment_family = exp_name_
 try:
@@ -221,7 +218,7 @@ except:
 print(f"Setting up experiment {experiment_family}")#
 print(f"Experiment id {experiment_id}")
 print(f"Run name {run_name}")
-mlflow.set_tracking_uri(mlflow_tracking_uri)
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 # start the recording 
 starter = mlflow.start_run(experiment_id=experiment_id,
                            run_name=run_name,
